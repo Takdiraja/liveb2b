@@ -421,13 +421,23 @@ header {
 /* Responsive adjustments */
 @media (max-width: 640px) {
     .header-content h1 {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
+        text-align: center;
+        line-height: 1.2;
     }
     
+    .header-content p {
+        font-size: 0.85rem;
+        text-align: center;
+        margin-top: 0.5rem;
+        padding: 0 1rem;
+    }
+
     .channel-card {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        align-items: stretch;
+        gap: 1.25rem;
+        padding: 1.25rem;
     }
     
     .card-left {
@@ -436,14 +446,13 @@ header {
     
     .card-right {
         width: 100%;
+        flex-direction: row;
         justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
     }
-    
-    .channel-card > .btn {
-        width: 100%;
-    }
-    
-    .status-badge {
-        margin-left: auto;
+
+    .card-right .btn {
+        flex: 1;
     }
 }
