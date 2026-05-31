@@ -27,6 +27,21 @@ export default async function handler(req, res) {
     let checkedCount = 0;
     let liveCount = 0;
 
+    // 1.5. Otomatis mencari Channel ID asli jika User hanya memasukkan URL dengan @nama (Handle)
+    for (let i = 0; i < channels.length; i++) {
+        if (!channels[i].channelId && channels[i].youtubeUrl && channels[i].youtubeUrl.includes('@')) {
+            const handleMatch = channels[i].youtubeUrl.match(/@([\w.-]+)/);
+            if (handleMatch) {
+                const handle = handleMatch[1];
+                const idRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=@${handle}&key=${YOUTUBE_API_KEY}`);
+                const idData = await idRes.json();
+                if (idData.items && idData.items.length > 0) {
+                    channels[i].channelId = idData.items[0].id;
+                }
+            }
+        }
+    }
+
     // 2. Cek jumlah Subscriber sekaligus (Lebih hemat kuota)
     const channelIds = channels.filter(c => c.channelId).map(c => c.channelId);
     if (channelIds.length > 0) {
