@@ -4,21 +4,6 @@ const initialChannels = [];
 let channels = [];
 let tempAvatarUrl = null;
 let tempChannelId = null;
-let isAdmin = false;
-
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCsNYPaCJmdg6l6rGzDLFzmTJpLhLTThCY",
-  authDomain: "back2back-2a6da.firebaseapp.com",
-  databaseURL: "https://back2back-2a6da-default-rtdb.firebaseio.com",
-  projectId: "back2back-2a6da",
-  storageBucket: "back2back-2a6da.firebasestorage.app",
-  messagingSenderId: "119217029270",
-  appId: "1:119217029270:web:95c81bc02227a6f7ebc2b7",
-  measurementId: "G-NWNYHFK27E"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
 // Obfuscated Default API Key
 const _p1 = atob('QUl6YVN5'); 
@@ -28,14 +13,23 @@ let ytApiKey = localStorage.getItem('ytApiKey') || (_p1 + _p2 + _p3);
 
 // Initialize App
 function initApp() {
-    // Listen to Firebase Realtime Database
-    db.ref('channels').on('value', (snapshot) => {
-        const data = snapshot.val();
-        channels = data || [];
+    // Load from localStorage or use initial data
+    const savedChannels = localStorage.getItem('ytDashboardChannels');
+    if (savedChannels) {
+        let loaded = JSON.parse(savedChannels);
         
-        renderUserView();
-        renderAdminTable();
-    });
+        // Migration: Fix missing channelIds for existing mock data
+        loaded = loaded.map(c => {
+            const initial = initialChannels.find(ic => ic.name === c.name);
+            if (initial && !c.channelId) c.channelId = initial.channelId;
+            return c;
+        });
+        channels = loaded;
+        saveChannels();
+    } else {
+        channels = [...initialChannels];
+        saveChannels();
+    }
 
     // Initialize Lucide icons
     lucide.createIcons();
@@ -44,18 +38,20 @@ function initApp() {
     if (ytApiKey) {
         document.getElementById('api-key-input').value = ytApiKey;
         // Start real-time auto check every 3 minutes (180000ms)
-        setInterval(() => checkLiveStatusAll(false), 180000);
+        setInterval(checkLiveStatusAll, 180000);
         // Do an initial check after 2 seconds
-        setTimeout(() => checkLiveStatusAll(false), 2000);
+        setTimeout(checkLiveStatusAll, 2000);
     }
+    renderUserView();
+    renderAdminTable();
 
     // Setup Event Listeners
     setupEventListeners();
 }
 
-// Save to Firebase
+// Save to localStorage
 function saveChannels() {
-    db.ref('channels').set(channels);
+    localStorage.setItem('ytDashboardChannels', JSON.stringify(channels));
 }
 
 // Render User View
@@ -251,7 +247,6 @@ function setupEventListeners() {
     adminToggleBtn.addEventListener('click', () => {
         const pw = prompt('Masukkan Password Admin:');
         if (pw === 'girdamill123') {
-            isAdmin = true;
             userView.classList.remove('active');
             adminView.classList.add('active');
         } else if (pw !== null) {
@@ -376,9 +371,7 @@ async function checkLiveStatusAll(manual = false) {
         }
     }
 
-    if (isAdmin) {
-        saveChannels(); // Only admin writes back to database to prevent loops and quota waste
-    }
+    saveChannels();
     renderAdminTable();
     renderUserView();
     
