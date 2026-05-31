@@ -43,14 +43,42 @@ function saveChannels() {
     db.ref('channels').set(channels);
 }
 
+// Helper for Role Badges
+const getRoleBadgeHTML = (role) => {
+    if (!role) return '';
+    let style = '';
+    switch(role) {
+        case 'OG': style = 'background: linear-gradient(135deg, #F3C300, #b58d00); color: #000; box-shadow: 0 0 10px rgba(243, 195, 0, 0.4); border: 1px solid #ffe670;'; break;
+        case 'The CB': style = 'background: linear-gradient(135deg, #8A2BE2, #5a119e); color: #fff; box-shadow: 0 0 10px rgba(138, 43, 226, 0.4); border: 1px solid #ba75ff;'; break;
+        case 'Member': style = 'background: linear-gradient(135deg, #00B4DB, #0083B0); color: #fff; border: 1px solid #5ce1ff;'; break;
+        case 'Hang around': style = 'background: linear-gradient(135deg, #7F8C8D, #4d5656); color: #fff; border: 1px solid #a8baba;'; break;
+        default: style = 'background: #333; color: #fff;';
+    }
+    return `<span style="display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; ${style}">${role}</span>`;
+};
+
 // Render User View
 function renderUserView(filterQuery = '') {
     const list = document.getElementById('channel-list');
     list.innerHTML = '';
 
-    const filtered = channels.filter(c => 
+    let filtered = channels.filter(c => 
         c.name.toLowerCase().includes(filterQuery.toLowerCase())
     );
+
+    // Sorting by Role Priority
+    const rolePriority = {
+        "OG": 1,
+        "The CB": 2,
+        "Member": 3,
+        "Hang around": 4
+    };
+
+    filtered.sort((a, b) => {
+        const priorityA = rolePriority[a.role] || 99;
+        const priorityB = rolePriority[b.role] || 99;
+        return priorityA - priorityB;
+    });
 
     if(filtered.length === 0) {
         list.innerHTML = `
@@ -76,6 +104,7 @@ function renderUserView(filterQuery = '') {
             <div class="card-left">
                 <img src="${channel.avatar}" alt="${channel.name}" class="avatar">
                 <div class="channel-info">
+                    ${getRoleBadgeHTML(channel.role)}
                     <h3 class="channel-name">${channel.name}</h3>
                     <p class="channel-handle">${channel.handle}</p>
                 </div>
@@ -105,7 +134,13 @@ function renderAdminTable() {
         return;
     }
 
-    channels.forEach(channel => {
+    // Sort Admin Table by Role as well for consistency
+    const rolePriority = { "OG": 1, "The CB": 2, "Member": 3, "Hang around": 4 };
+    let sortedAdminChannels = [...channels].sort((a, b) => {
+        return (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99);
+    });
+
+    sortedAdminChannels.forEach(channel => {
         const tr = document.createElement('tr');
         
         const badgeHTML = channel.isLive 
@@ -117,7 +152,8 @@ function renderAdminTable() {
                 <div class="admin-channel-info">
                     <img src="${channel.avatar}" alt="${channel.name}">
                     <div>
-                        <div style="font-weight: 600; color: #fff;">${channel.name}</div>
+                        ${getRoleBadgeHTML(channel.role)}
+                        <div style="font-weight: 600; color: #fff; margin-top: 2px;">${channel.name}</div>
                         <div style="font-size: 0.8rem; color: var(--text-muted);">${channel.handle}</div>
                     </div>
                 </div>
@@ -158,11 +194,16 @@ async function addChannel(e) {
     e.preventDefault();
     
     const urlInput = document.getElementById('c-url');
+    const roleInput = document.getElementById('c-role');
     const url = urlInput.value.trim();
+    const role = roleInput.value;
     const submitBtn = document.getElementById('submit-channel-btn');
     const statusText = document.getElementById('fetch-status');
 
-    if(!url) return;
+    if(!url || !role) {
+        alert("URL dan Pangkat (Role) wajib diisi!");
+        return;
+    }
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i data-lucide="loader" class="spin"></i> Mencari data...';
@@ -197,6 +238,7 @@ async function addChannel(e) {
                 youtubeUrl: url,
                 channelId: channelId,
                 isLive: false,
+                role: role,
                 avatar: (data.image && data.image.url) ? data.image.url : `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}&backgroundColor=b6e3f4`,
                 thumbnail: ''
             };
@@ -209,6 +251,7 @@ async function addChannel(e) {
             
             // Reset Form & Update UI
             urlInput.value = '';
+            roleInput.value = '';
             renderAdminTable();
             renderUserView();
 
