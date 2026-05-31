@@ -4,6 +4,21 @@ const initialChannels = [];
 let channels = [];
 let tempAvatarUrl = null;
 let tempChannelId = null;
+let isAdmin = false;
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCsNYPaCJmdg6l6rGzDLFzmTJpLhLTThCY",
+  authDomain: "back2back-2a6da.firebaseapp.com",
+  databaseURL: "https://back2back-2a6da-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "back2back-2a6da",
+  storageBucket: "back2back-2a6da.firebasestorage.app",
+  messagingSenderId: "119217029270",
+  appId: "1:119217029270:web:95c81bc02227a6f7ebc2b7",
+  measurementId: "G-NWNYHFK27E"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // Obfuscated Default API Key
 const _p1 = atob('QUl6YVN5'); 
@@ -13,23 +28,14 @@ let ytApiKey = localStorage.getItem('ytApiKey') || (_p1 + _p2 + _p3);
 
 // Initialize App
 function initApp() {
-    // Load from localStorage or use initial data
-    const savedChannels = localStorage.getItem('ytDashboardChannels');
-    if (savedChannels) {
-        let loaded = JSON.parse(savedChannels);
+    // Listen to Firebase Realtime Database
+    db.ref('channels').on('value', (snapshot) => {
+        const data = snapshot.val();
+        channels = data || [];
         
-        // Migration: Fix missing channelIds for existing mock data
-        loaded = loaded.map(c => {
-            const initial = initialChannels.find(ic => ic.name === c.name);
-            if (initial && !c.channelId) c.channelId = initial.channelId;
-            return c;
-        });
-        channels = loaded;
-        saveChannels();
-    } else {
-        channels = [...initialChannels];
-        saveChannels();
-    }
+        renderUserView();
+        renderAdminTable();
+    });
 
     // Initialize Lucide icons
     lucide.createIcons();
@@ -38,20 +44,18 @@ function initApp() {
     if (ytApiKey) {
         document.getElementById('api-key-input').value = ytApiKey;
         // Start real-time auto check every 3 minutes (180000ms)
-        setInterval(checkLiveStatusAll, 180000);
+        setInterval(() => checkLiveStatusAll(false), 180000);
         // Do an initial check after 2 seconds
-        setTimeout(checkLiveStatusAll, 2000);
+        setTimeout(() => checkLiveStatusAll(false), 2000);
     }
-    renderUserView();
-    renderAdminTable();
 
     // Setup Event Listeners
     setupEventListeners();
 }
 
-// Save to localStorage
+// Save to Firebase
 function saveChannels() {
-    localStorage.setItem('ytDashboardChannels', JSON.stringify(channels));
+    db.ref('channels').set(channels);
 }
 
 // Render User View
@@ -64,7 +68,14 @@ function renderUserView(filterQuery = '') {
     );
 
     if(filtered.length === 0) {
-        list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Tidak ada channel yang ditemukan.</p>';
+        list.innerHTML = `
+            <div style="text-align: center; padding: 4rem 1rem; color: var(--text-muted); background: var(--bg-card); border: 1px dashed var(--border-glass); border-radius: 16px; animation: fadeIn 0.4s ease;">
+                <i data-lucide="radio" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5; color: var(--neon-primary);"></i>
+                <p style="font-size: 1.2rem; font-weight: 600; color: #fff;">Belum Ada Channel</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Daftar kreator favorit akan muncul di sini setelah ditambahkan.</p>
+            </div>
+        `;
+        lucide.createIcons();
         return;
     }
 
@@ -77,19 +88,20 @@ function renderUserView(filterQuery = '') {
             : `<div class="status-badge offline"><span class="dot"></span> Offline</div>`;
 
         card.innerHTML = `
-            <div class="card-header">
+            <div class="card-left">
                 <img src="${channel.avatar}" alt="${channel.name}" class="avatar">
                 <div class="channel-info">
                     <h3 class="channel-name">${channel.name}</h3>
                     <p class="channel-handle">${channel.handle}</p>
                 </div>
-                ${badgeHTML}
             </div>
-
-            <a href="${channel.youtubeUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="white-space: nowrap;">
-                <i data-lucide="play" style="width: 18px; height: 18px;"></i>
-                Tonton
-            </a>
+            <div class="card-right">
+                ${badgeHTML}
+                <a href="${channel.youtubeUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="white-space: nowrap;">
+                    <i data-lucide="play" style="width: 16px; height: 16px; fill: currentColor;"></i>
+                    Tonton
+                </a>
+            </div>
         `;
         list.appendChild(card);
     });
@@ -247,6 +259,7 @@ function setupEventListeners() {
     adminToggleBtn.addEventListener('click', () => {
         const pw = prompt('Masukkan Password Admin:');
         if (pw === 'girdamill123') {
+            isAdmin = true;
             userView.classList.remove('active');
             adminView.classList.add('active');
         } else if (pw !== null) {
@@ -371,7 +384,9 @@ async function checkLiveStatusAll(manual = false) {
         }
     }
 
-    saveChannels();
+    if (isAdmin) {
+        saveChannels(); // Only admin writes back to database to prevent loops and quota waste
+    }
     renderAdminTable();
     renderUserView();
     
