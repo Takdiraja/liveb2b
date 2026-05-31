@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACK2BACK MEMBER</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Favicon -->
+    <link rel="icon" href="https://i.ibb.co/2YsKFY3Q/1ca9a640-1ba1-482a-9a87-346e5ec28238-removalai-preview.webp" type="image/png">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- Main Container -->
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <img src="https://i.ibb.co/2YsKFY3Q/1ca9a640-1ba1-482a-9a87-346e5ec28238-removalai-preview.webp" alt="BACK2BACK Logo" class="main-logo" id="main-logo" style="display: block; margin: 0 auto 1rem auto; width: 120px; height: auto;" onerror="this.style.display='none'">
+                <h1 style="margin-top: 0;">
+                    BACK2BACK MEMBER
+                </h1>
+                <p>Pantau streaming live dari kreator favorit Anda</p>
+            </div>
+            <!-- Secret Admin Toggle -->
+            <button id="admin-toggle-btn" title="Admin Mode" class="icon-btn hidden-toggle">
+                <i data-lucide="lock"></i>
+            </button>
+        </header>
+
+        <!-- User View -->
+        <main id="user-view" class="view-section active">
+            <!-- Search & Filter -->
+            <div class="search-bar">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="search-input" placeholder="Cari nama channel...">
+            </div>
+
+            <!-- Channel List -->
+            <div id="channel-list" class="channel-list">
+                <!-- Rows will be injected here via JS -->
+            </div>
+        </main>
+
+        <!-- Admin View -->
+        <main id="admin-view" class="view-section">
+            <div class="admin-header">
+                <h2><i data-lucide="settings"></i> Admin Dashboard</h2>
+                <button id="back-to-user-btn" class="btn btn-secondary">
+                    <i data-lucide="arrow-left"></i> Kembali
+                </button>
+            </div>
+
+            <div class="admin-content">
+                <!-- API Settings -->
+                <div class="admin-card settings-container" style="grid-column: 1 / -1;">
+                    <h3><i data-lucide="key"></i> Pengaturan API YouTube</h3>
+                    <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label for="api-key-input">API Key (YouTube Data API v3)</label>
+                            <input type="password" id="api-key-input" placeholder="AIzaSy...">
+                        </div>
+                        <button id="save-api-btn" class="btn btn-primary" style="height: 44px; white-space: nowrap;">
+                            <i data-lucide="save"></i> Simpan
+                        </button>
+                        <button id="check-live-btn" class="btn btn-secondary" style="height: 44px; white-space: nowrap; border-color: var(--neon-primary); color: var(--neon-primary);">
+                            <i data-lucide="refresh-cw"></i> Cek Status Live
+                        </button>
+                    </div>
+                    <small id="live-check-status" style="display: block; margin-top: 0.75rem; color: var(--text-muted);"></small>
+                </div>
+
+                <!-- Add Channel Form -->
+                <div class="admin-card add-form-container">
+                    <h3>Tambah Channel Baru</h3>
+                    <form id="add-channel-form">
+                        <div class="form-group">
+                            <label for="c-url">URL / Link YouTube</label>
+                            <input type="url" id="c-url" required placeholder="Contoh: https://youtube.com/@GePamungkasYT">
+                            <small id="fetch-status" style="display: none; margin-top: 0.5rem; font-size: 0.8rem;"></small>
+                        </div>
+                        <button type="submit" id="submit-channel-btn" class="btn btn-primary w-full">
+                            <i data-lucide="plus"></i> Tambah Channel
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Channel List Table -->
+                <div class="admin-card list-container">
+                    <h3>Daftar Channel</h3>
+                    <div class="table-responsive">
+                        <table class="channel-table">
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body">
+                                <!-- Rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Firebase SDK (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- JS -->
+    <script src="script.js"></script>
+</body>
+</html>
