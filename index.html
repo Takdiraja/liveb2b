@@ -55,19 +55,15 @@
             </div>
 
             <div class="admin-content">
-                <!-- API Settings -->
+                <!-- Server Controls -->
                 <div class="admin-card settings-container" style="grid-column: 1 / -1;">
-                    <h3><i data-lucide="key"></i> Pengaturan API YouTube</h3>
+                    <h3><i data-lucide="server"></i> Kontrol Server Vercel</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Server Vercel otomatis mengecek YouTube setiap 30 menit. Tekan tombol di bawah jika Anda ingin memaksa server mengecek sekarang juga.
+                    </p>
                     <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label for="api-key-input">API Key (YouTube Data API v3)</label>
-                            <input type="password" id="api-key-input" placeholder="AIzaSy...">
-                        </div>
-                        <button id="save-api-btn" class="btn btn-primary" style="height: 44px; white-space: nowrap;">
-                            <i data-lucide="save"></i> Simpan
-                        </button>
-                        <button id="check-live-btn" class="btn btn-secondary" style="height: 44px; white-space: nowrap; border-color: var(--neon-primary); color: var(--neon-primary);">
-                            <i data-lucide="refresh-cw"></i> Cek Status Live
+                        <button id="check-live-btn" class="btn btn-primary" style="height: 44px; white-space: nowrap;">
+                            <i data-lucide="refresh-cw"></i> Paksa Cek Live (Manual)
                         </button>
                     </div>
                     <small id="live-check-status" style="display: block; margin-top: 0.75rem; color: var(--text-muted);"></small>

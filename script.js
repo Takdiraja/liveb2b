@@ -20,12 +20,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Obfuscated Default API Key
-const _p1 = atob('QUl6YVN5'); 
-const _p2 = 'Azy2XiRFEBZ1Jxmn';
-const _p3 = atob('Q092bFhvdV8wX0xyZllzSTA=');
-let ytApiKey = localStorage.getItem('ytApiKey') || (_p1 + _p2 + _p3);
-
 // Initialize App
 function initApp() {
     // Listen to Firebase Realtime Database
@@ -39,15 +33,6 @@ function initApp() {
 
     // Initialize Lucide icons
     lucide.createIcons();
-
-    // Render initial views
-    if (ytApiKey) {
-        document.getElementById('api-key-input').value = ytApiKey;
-        // Start real-time auto check every 3 minutes (180000ms)
-        setInterval(() => checkLiveStatusAll(false), 180000);
-        // Do an initial check after 2 seconds
-        setTimeout(() => checkLiveStatusAll(false), 2000);
-    }
 
     // Setup Event Listeners
     setupEventListeners();
@@ -228,7 +213,7 @@ async function addChannel(e) {
             renderUserView();
 
             // Auto trigger API check to get subs & live status
-            if (ytApiKey && channelId) {
+            if (channelId) {
                 checkLiveStatusAll(false);
             }
         } else {
@@ -282,25 +267,9 @@ function setupEventListeners() {
     const addForm = document.getElementById('add-channel-form');
     addForm.addEventListener('submit', addChannel);
 
-    // API Key Settings
-    const saveApiBtn = document.getElementById('save-api-btn');
-    saveApiBtn.addEventListener('click', () => {
-        const key = document.getElementById('api-key-input').value.trim();
-        localStorage.setItem('ytApiKey', key);
-        ytApiKey = key;
-        const statusText = document.getElementById('live-check-status');
-        statusText.textContent = 'API Key berhasil disimpan!';
-        statusText.style.color = '#10b981';
-        setTimeout(() => statusText.textContent = '', 3000);
-    });
-
     // Check Live Status Button
     const checkLiveBtn = document.getElementById('check-live-btn');
     checkLiveBtn.addEventListener('click', () => {
-        if (!ytApiKey) {
-            alert('Mohon masukkan dan simpan API Key terlebih dahulu!');
-            return;
-        }
         checkLiveStatusAll(true);
     });
 }
@@ -313,95 +282,48 @@ function formatSubscribers(num) {
     return num.toString();
 }
 
-// Function to check live status for all channels
+// Function to check live status using Backend Server
 async function checkLiveStatusAll(manual = false) {
-    if (!ytApiKey) return;
+    if (!isAdmin && !manual) return;
 
     const statusText = document.getElementById('live-check-status');
     const checkLiveBtn = document.getElementById('check-live-btn');
     
     if(statusText) {
-        statusText.textContent = 'Memeriksa status live & jumlah subscriber... Mohon tunggu.';
+        statusText.textContent = 'Memerintah server Vercel untuk mengecek... Mohon tunggu.';
         statusText.style.color = 'var(--neon-primary)';
     }
     if(checkLiveBtn) checkLiveBtn.disabled = true;
 
-    let checkedCount = 0;
-    let liveCount = 0;
-    
-    // First: Fetch all subscriber counts in one batch call
-    const channelIds = channels.filter(c => c.channelId).map(c => c.channelId);
-    if (channelIds.length > 0) {
-        try {
-            // Can fetch up to 50 IDs at once
-            const idsParam = channelIds.join(',');
-            const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${idsParam}&key=${ytApiKey}`);
-            const statsData = await statsRes.json();
-            
-            if (statsData.items) {
-                statsData.items.forEach(item => {
-                    const channel = channels.find(c => c.channelId === item.id);
-                    if (channel) {
-                        const subsCount = item.statistics.subscriberCount;
-                        const formattedSubs = formatSubscribers(subsCount);
-                        // Update the handle string to replace "... Subscribers" with actual count
-                        if (channel.handle.includes('Subscribers')) {
-                            channel.handle = channel.handle.replace(/- .*Subscribers/, `- ${formattedSubs} Subscribers`);
-                        }
-                    }
-                });
-            }
-        } catch (err) {
-            console.error("Failed to fetch subscriber counts:", err);
+    try {
+        // Panggil endpoint backend kita dengan secret key
+        const res = await fetch('/api/cron?secret=girdamill123');
+        const data = await res.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
         }
-    }
-
-    // Second: Check live status for each channel
-
-    for (let i = 0; i < channels.length; i++) {
-        let channel = channels[i];
-        if (!channel.channelId) continue; // Skip if no ID
-
-        try {
-            // YouTube Data API search for active live broadcast
-            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.channelId}&type=video&eventType=live&key=${ytApiKey}`);
-            const data = await res.json();
-            
-            if (data.error) {
-                console.error("API Error for " + channel.name + ":", data.error.message);
-                continue;
-            }
-
-            checkedCount++;
-            if (data.items && data.items.length > 0) {
-                channel.isLive = true;
-                liveCount++;
-            } else {
-                channel.isLive = false;
-            }
-        } catch (err) {
-            console.error("Network Error for " + channel.name + ":", err);
+        
+        if(statusText) {
+            statusText.textContent = `Server merespon: ${data.message} (${data.live} dari ${data.checked} channel sedang live)`;
+            statusText.style.color = '#10b981';
         }
-    }
-
-    if (isAdmin) {
-        saveChannels(); // Only admin writes back to database to prevent loops and quota waste
-    }
-    renderAdminTable();
-    renderUserView();
-    
-    if(statusText) {
-        statusText.textContent = `Selesai diperiksa. (${liveCount} dari ${checkedCount} channel sedang live)`;
-        statusText.style.color = '#10b981';
-    }
-    if(checkLiveBtn) checkLiveBtn.disabled = false;
-    
-    if(manual && statusText) {
-        setTimeout(() => {
-            if(statusText.textContent.includes('Selesai')) {
-                statusText.textContent = '';
-            }
-        }, 5000);
+    } catch (err) {
+        console.error("Gagal memanggil server backend:", err);
+        if(statusText) {
+            statusText.textContent = 'Gagal memanggil server. ' + err.message;
+            statusText.style.color = 'var(--neon-red)';
+        }
+    } finally {
+        if(checkLiveBtn) checkLiveBtn.disabled = false;
+        
+        if(manual && statusText) {
+            setTimeout(() => {
+                if(statusText.textContent.includes('merespon')) {
+                    statusText.textContent = '';
+                }
+            }, 5000);
+        }
     }
 }
 
