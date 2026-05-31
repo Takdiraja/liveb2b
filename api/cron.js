@@ -42,8 +42,7 @@ export default async function handler(req, res) {
         }
     }
 
-    let checkedCount = 0;
-    let liveCount = 0;
+
 
     // 2. Cek Status Live tiap channel menggunakan HTML Scraping (100% GRATIS, TANPA KUOTA API)
     for (let i = 0; i < channels.length; i++) {
