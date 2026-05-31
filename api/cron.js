@@ -42,54 +42,48 @@ export default async function handler(req, res) {
         }
     }
 
-    // 2. Cek jumlah Subscriber sekaligus (Lebih hemat kuota)
-    const channelIds = channels.filter(c => c.channelId).map(c => c.channelId);
-    if (channelIds.length > 0) {
-      const idsParam = channelIds.join(',');
-      const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${idsParam}&key=${YOUTUBE_API_KEY}`);
-      const statsData = await statsRes.json();
-      
-      if (statsData.items) {
-        statsData.items.forEach(item => {
-          const channel = channels.find(c => c.channelId === item.id);
-          if (channel) {
-            const subsCount = item.statistics.subscriberCount;
-            // Format angka
-            let formattedSubs = subsCount;
-            if (subsCount >= 1000000) {
-                formattedSubs = (subsCount / 1000000).toFixed(1) + 'M';
-            } else if (subsCount >= 1000) {
-                formattedSubs = (subsCount / 1000).toFixed(1) + 'K';
-            } else {
-                formattedSubs = subsCount.toString();
-            }
-            
-            if (channel.handle && channel.handle.includes('Subscribers')) {
-                channel.handle = channel.handle.replace(/- .*Subscribers/, `- ${formattedSubs} Subscribers`);
-            }
-          }
-        });
-      }
-    }
+    let checkedCount = 0;
+    let liveCount = 0;
 
-    // 3. Cek Status Live tiap channel
+    // 2. Cek Status Live tiap channel menggunakan HTML Scraping (100% GRATIS, TANPA KUOTA API)
     for (let i = 0; i < channels.length; i++) {
       let channel = channels[i];
-      if (!channel.channelId) continue;
+      let scrapeUrl = '';
 
-      const searchRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.channelId}&type=video&eventType=live&key=${YOUTUBE_API_KEY}`);
-      const searchData = await searchRes.json();
+      // Tentukan URL untuk di-scrape (Bisa Handle @ atau Channel ID)
+      if (channel.youtubeUrl && channel.youtubeUrl.includes('@')) {
+          const handleMatch = channel.youtubeUrl.match(/@([\w.-]+)/);
+          if (handleMatch) scrapeUrl = `https://www.youtube.com/@${handleMatch[1]}/live`;
+      } else if (channel.channelId) {
+          scrapeUrl = `https://www.youtube.com/channel/${channel.channelId}/live`;
+      }
 
-      checkedCount++;
-      if (searchData.items && searchData.items.length > 0) {
-        channel.isLive = true;
-        liveCount++;
-      } else {
-        channel.isLive = false;
+      if (!scrapeUrl) continue;
+
+      try {
+          // Menyamar sebagai browser Chrome biasa agar tidak diblokir YouTube
+          const scrapeRes = await fetch(scrapeUrl, {
+              headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+                  'Accept-Language': 'en-US,en;q=0.9'
+              }
+          });
+          const htmlText = await scrapeRes.text();
+          
+          checkedCount++;
+          // YouTube menaruh flag "isLiveNow":true di source code jika sedang live
+          if (htmlText.includes('"isLiveNow":true') || htmlText.includes('"isLive":true')) {
+              channel.isLive = true;
+              liveCount++;
+          } else {
+              channel.isLive = false;
+          }
+      } catch (err) {
+          console.error("Gagal memeriksa:", channel.name, err);
       }
     }
 
-    // 4. Simpan kembali data yang sudah terupdate ke Firebase
+    // 3. Simpan hasil perubahan (Live/Offline) kembali ke Firebase
     await fetch(`${FIREBASE_DB_URL}/channels.json`, {
       method: 'PUT',
       headers: {
@@ -99,13 +93,13 @@ export default async function handler(req, res) {
     });
 
     return res.status(200).json({ 
-        message: 'Pengecekan berhasil!', 
-        checked: checkedCount, 
-        live: liveCount 
+      message: 'Pengecekan berhasil! Sistem Anti-Limit berjalan.', 
+      checked: checkedCount, 
+      live: liveCount 
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Cron Error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
