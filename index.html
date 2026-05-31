@@ -76,6 +76,16 @@
                         <div class="form-group">
                             <label for="c-url">URL / Link YouTube</label>
                             <input type="url" id="c-url" required placeholder="Contoh: https://youtube.com/@GePamungkasYT">
+                        </div>
+                        <div class="form-group">
+                            <label for="c-role">Pangkat (Role)</label>
+                            <select id="c-role" required>
+                                <option value="" disabled selected>-- Pilih Pangkat --</option>
+                                <option value="OG">OG</option>
+                                <option value="The CB">The CB</option>
+                                <option value="Member">Member</option>
+                                <option value="Hang around">Hang around</option>
+                            </select>
                             <small id="fetch-status" style="display: none; margin-top: 0.5rem; font-size: 0.8rem;"></small>
                         </div>
                         <button type="submit" id="submit-channel-btn" class="btn btn-primary w-full">
