@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACK2BACK Wiki</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="/styles.css">
+    <!-- Favicon -->
+    <link rel="icon" href="https://i.ibb.co/2YsKFY3Q/1ca9a640-1ba1-482a-9a87-346e5ec28238-removalai-preview.webp" type="image/png">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Specific Wiki Styles */
+        .wiki-header {
+            position: relative;
+            height: 300px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: flex-end;
+            padding: 2rem;
+        }
+
+        .wiki-header-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(10px) brightness(0.4);
+            z-index: 1;
+            transform: scale(1.1);
+        }
+
+        .wiki-header-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .wiki-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            border: 4px solid var(--neon-primary);
+            box-shadow: 0 0 20px var(--neon-glow);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .wiki-title-area h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .wiki-title-area h2 {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .wiki-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .wiki-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .wiki-card h3 {
+            color: var(--neon-primary);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-row {
+            margin-bottom: 1rem;
+        }
+
+        .info-row label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-row span {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .prose p {
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .wiki-grid {
+                grid-template-columns: 1fr;
+            }
+            .wiki-header {
+                height: auto;
+                padding: 1.5rem;
+            }
+            .wiki-header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: var(--neon-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading" class="loading-screen">
+        <i data-lucide="loader" class="spin" style="width: 48px; height: 48px; animation: spin 1s linear infinite;"></i>
+        <h2 style="margin-top: 1rem;">Memuat Data Lore...</h2>
+        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+    </div>
+
+    <div class="app-container" id="wiki-content" style="display: none;">
+        
+        <a href="/" class="btn btn-secondary" style="display: inline-flex; margin-bottom: 1.5rem; width: auto;">
+            <i data-lucide="arrow-left"></i> Kembali ke Daftar Member
+        </a>
+
+        <!-- Header -->
+        <div class="wiki-header">
+            <div class="wiki-header-bg" id="w-bg"></div>
+            <div class="wiki-header-content">
+                <img src="" alt="Avatar" class="wiki-avatar" id="w-avatar">
+                <div class="wiki-title-area">
+                    <div id="w-role" style="margin-bottom: 0.5rem;"></div>
+                    <h1 id="w-name">Character Name</h1>
+                    <h2 id="w-channel">@ChannelName</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="wiki-grid">
+            <!-- Sidebar Info -->
+            <div class="wiki-sidebar">
+                <div class="wiki-card" style="margin-bottom: 1.5rem;">
+                    <h3><i data-lucide="info"></i> Informasi Profil</h3>
+                    <div class="info-row">
+                        <label>Afiliasi / Faksi</label>
+                        <span id="w-affil">-</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Pangkat Channel</label>
+                        <span id="w-role-text">-</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Status Live</label>
+                        <div id="w-status"></div>
+                    </div>
+                </div>
+
+                <a id="w-youtube-btn" href="#" target="_blank" class="btn btn-primary w-full" style="height: 50px; font-size: 1.1rem;">
+                    <i data-lucide="youtube"></i> Kunjungi Channel
+                </a>
+            </div>
+
+            <!-- Main Content -->
+            <div class="wiki-main">
+                <div class="wiki-card" style="margin-bottom: 1.5rem;">
+                    <h3><i data-lucide="book-open"></i> Lore & Biografi</h3>
+                    <div class="prose" id="w-bio-content">
+                        Belum ada biografi yang ditulis untuk karakter ini.
+                    </div>
+                </div>
+
+                <div class="wiki-card">
+                    <h3><i data-lucide="sparkles"></i> Trivia / Fakta Unik</h3>
+                    <div class="prose" id="w-trivia-content">
+                        Belum ada trivia.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDK (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- JS -->
+    <script src="/wiki.js"></script>
+</body>
+</html>

@@ -111,6 +111,10 @@ function renderUserView(filterQuery = '') {
             </div>
             <div class="card-right">
                 ${badgeHTML}
+                <a href="${channel.wiki && channel.wiki.slug ? '/wiki/' + channel.wiki.slug : '#'}" class="btn btn-secondary" style="white-space: nowrap;" ${!(channel.wiki && channel.wiki.slug) ? 'onclick="alert(\'Wiki untuk karakter ini belum tersedia.\'); return false;"' : ''}>
+                    <i data-lucide="book-open" style="width: 16px; height: 16px; fill: currentColor;"></i>
+                    Wiki
+                </a>
                 <a href="${channel.youtubeUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="white-space: nowrap;">
                     <i data-lucide="play" style="width: 16px; height: 16px; fill: currentColor;"></i>
                     Tonton
@@ -160,7 +164,10 @@ function renderAdminTable() {
             </td>
             <td>${badgeHTML}</td>
             <td>
-                <button class="btn btn-danger delete-btn" data-id="${channel.id}" title="Hapus">
+                <button class="btn btn-secondary edit-wiki-btn" data-id="${channel.id}" title="Edit Wiki" style="padding: 0.5rem; background: rgba(255,255,255,0.1); margin-right: 0.5rem;">
+                    <i data-lucide="book-open" style="width: 16px; height: 16px;"></i>
+                </button>
+                <button class="btn btn-danger delete-btn" data-id="${channel.id}" title="Hapus" style="padding: 0.5rem;">
                     <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                 </button>
             </td>
@@ -173,6 +180,14 @@ function renderAdminTable() {
         btn.addEventListener('click', (e) => {
             const id = e.currentTarget.getAttribute('data-id');
             deleteChannel(id);
+        });
+    });
+
+    // Attach edit wiki events
+    document.querySelectorAll('.edit-wiki-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            openWikiModal(id);
         });
     });
 
@@ -315,6 +330,71 @@ function setupEventListeners() {
     checkLiveBtn.addEventListener('click', () => {
         checkLiveStatusAll(true);
     });
+
+    // Edit Wiki Form Submit
+    const editWikiForm = document.getElementById('edit-wiki-form');
+    editWikiForm.addEventListener('submit', handleWikiSubmit);
+
+    // Close Wiki Modal
+    const closeWikiBtn = document.getElementById('close-wiki-modal');
+    closeWikiBtn.addEventListener('click', () => {
+        document.getElementById('wiki-modal').classList.remove('active');
+    });
+}
+
+// Wiki Modal Handlers
+function openWikiModal(id) {
+    const channel = channels.find(c => c.id === id);
+    if(!channel) return;
+
+    document.getElementById('w-id').value = id;
+    
+    if(channel.wiki) {
+        document.getElementById('w-slug').value = channel.wiki.slug || '';
+        document.getElementById('w-fullname').value = channel.wiki.fullName || '';
+        document.getElementById('w-affiliation').value = channel.wiki.affiliation || '';
+        document.getElementById('w-bio').value = channel.wiki.bio || '';
+        document.getElementById('w-trivia').value = channel.wiki.trivia || '';
+    } else {
+        // Auto-generate slug suggestion
+        const suggestedSlug = channel.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        document.getElementById('w-slug').value = suggestedSlug;
+        document.getElementById('w-fullname').value = '';
+        document.getElementById('w-affiliation').value = '';
+        document.getElementById('w-bio').value = '';
+        document.getElementById('w-trivia').value = '';
+    }
+
+    document.getElementById('wiki-modal').classList.add('active');
+}
+
+function handleWikiSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('w-id').value;
+    const channelIndex = channels.findIndex(c => c.id === id);
+    if(channelIndex === -1) return;
+
+    let slug = document.getElementById('w-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    
+    // Check slug uniqueness
+    const isDuplicate = channels.some(c => c.id !== id && c.wiki && c.wiki.slug === slug);
+    if(isDuplicate) {
+        alert("URL Slug ini sudah digunakan oleh channel lain! Silakan gunakan slug berbeda.");
+        return;
+    }
+
+    channels[channelIndex].wiki = {
+        slug: slug,
+        fullName: document.getElementById('w-fullname').value.trim(),
+        affiliation: document.getElementById('w-affiliation').value.trim(),
+        bio: document.getElementById('w-bio').value.trim(),
+        trivia: document.getElementById('w-trivia').value.trim()
+    };
+
+    saveChannels();
+    document.getElementById('wiki-modal').classList.remove('active');
+    renderUserView();
+    alert("Data Wiki berhasil disimpan!");
 }
 
 // Helper to format numbers (e.g. 1500 -> 1.5K)

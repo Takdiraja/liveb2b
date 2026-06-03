@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/wiki/:slug",
+      "destination": "/wiki.html"
+    }
+  ]
+}

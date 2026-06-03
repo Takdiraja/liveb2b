@@ -115,6 +115,42 @@
             </div>
         </main>
 
+        <!-- Edit Wiki Modal (Admin) -->
+        <div id="wiki-modal" class="modal-overlay">
+            <div class="modal-content admin-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3><i data-lucide="book-open"></i> Edit Wiki / Lore</h3>
+                    <button id="close-wiki-modal" class="icon-btn" style="color: var(--text-muted);"><i data-lucide="x"></i></button>
+                </div>
+                <form id="edit-wiki-form">
+                    <input type="hidden" id="w-id">
+                    <div class="form-group">
+                        <label for="w-slug">URL Slug <small>(Misal: girda, huruf kecil tanpa spasi)</small></label>
+                        <input type="text" id="w-slug" required placeholder="Contoh: girda">
+                    </div>
+                    <div class="form-group">
+                        <label for="w-fullname">Nama Lengkap Karakter (RP)</label>
+                        <input type="text" id="w-fullname" placeholder="Contoh: Binda Girda">
+                    </div>
+                    <div class="form-group">
+                        <label for="w-affiliation">Afiliasi / Geng</label>
+                        <input type="text" id="w-affiliation" placeholder="Contoh: BACK2BACK, Polisi, Warga Sipil">
+                    </div>
+                    <div class="form-group">
+                        <label for="w-bio">Lore / Biografi</label>
+                        <textarea id="w-bio" rows="6" placeholder="Ketik cerita latar belakang karakter di sini..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="w-trivia">Trivia / Fakta Unik</label>
+                        <textarea id="w-trivia" rows="3" placeholder="Contoh: Suka makan donat..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i data-lucide="save"></i> Simpan Data Wiki
+                    </button>
+                </form>
+            </div>
+        </div>
+
     </div>
 
     <!-- Firebase SDK (v8) -->
