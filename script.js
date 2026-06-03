@@ -352,6 +352,7 @@ function openWikiModal(id) {
     if(channel.wiki) {
         document.getElementById('w-slug').value = channel.wiki.slug || '';
         document.getElementById('w-fullname').value = channel.wiki.fullName || '';
+        document.getElementById('w-image').value = channel.wiki.imageUrl || '';
         document.getElementById('w-affiliation').value = channel.wiki.affiliation || '';
         document.getElementById('w-bio').value = channel.wiki.bio || '';
         document.getElementById('w-trivia').value = channel.wiki.trivia || '';
@@ -360,6 +361,7 @@ function openWikiModal(id) {
         const suggestedSlug = channel.name.toLowerCase().replace(/[^a-z0-9]/g, '');
         document.getElementById('w-slug').value = suggestedSlug;
         document.getElementById('w-fullname').value = '';
+        document.getElementById('w-image').value = '';
         document.getElementById('w-affiliation').value = '';
         document.getElementById('w-bio').value = '';
         document.getElementById('w-trivia').value = '';
@@ -386,6 +388,7 @@ function handleWikiSubmit(e) {
     channels[channelIndex].wiki = {
         slug: slug,
         fullName: document.getElementById('w-fullname').value.trim(),
+        imageUrl: document.getElementById('w-image').value.trim(),
         affiliation: document.getElementById('w-affiliation').value.trim(),
         bio: document.getElementById('w-bio').value.trim(),
         trivia: document.getElementById('w-trivia').value.trim()

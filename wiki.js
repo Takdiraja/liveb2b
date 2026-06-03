@@ -56,9 +56,11 @@ async function initWiki() {
 function renderWiki(channel) {
     document.title = `${channel.wiki.fullName || channel.name} - BACK2BACK Wiki`;
     
-    // Header
-    document.getElementById('w-bg').style.backgroundImage = `url('${channel.avatar}')`;
-    document.getElementById('w-avatar').src = channel.avatar;
+    // Header Image Logic (Use custom character image if available, else YouTube avatar)
+    const displayImage = channel.wiki.imageUrl || channel.avatar;
+
+    document.getElementById('w-bg').style.backgroundImage = `url('${displayImage}')`;
+    document.getElementById('w-avatar').src = displayImage;
     document.getElementById('w-role').innerHTML = getRoleBadgeHTML(channel.role);
     document.getElementById('w-name').textContent = channel.wiki.fullName || channel.name;
     document.getElementById('w-channel').textContent = channel.handle;
