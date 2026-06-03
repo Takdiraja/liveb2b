@@ -23,7 +23,7 @@ const getRoleBadgeHTML = (role) => {
         case 'Hang around': style = 'background: linear-gradient(135deg, #7F8C8D, #4d5656); color: #fff; border: 1px solid #a8baba;'; break;
         default: style = 'background: #333; color: #fff;';
     }
-    return \`<span style="display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; \${style}">\${role}</span>\`;
+    return `<span style="display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; ${style}">${role}</span>`;
 };
 
 // Initialize Wiki Page
@@ -31,7 +31,6 @@ async function initWiki() {
     lucide.createIcons();
 
     // Ambil slug dari URL path
-    // Contoh URL: domain.com/wiki/girda -> pathname: /wiki/girda -> split -> ['','wiki','girda']
     const pathParts = window.location.pathname.split('/');
     const slug = pathParts[pathParts.length - 1] || new URLSearchParams(window.location.search).get('id');
 
@@ -49,16 +48,16 @@ async function initWiki() {
         if(channel) {
             renderWiki(channel);
         } else {
-            showError(\`Lore untuk "\${slug}" belum dibuat atau karakter tidak ditemukan.\`);
+            showError(`Lore untuk "${slug}" belum dibuat atau karakter tidak ditemukan.`);
         }
     });
 }
 
 function renderWiki(channel) {
-    document.title = \`\${channel.wiki.fullName || channel.name} - BACK2BACK Wiki\`;
+    document.title = `${channel.wiki.fullName || channel.name} - BACK2BACK Wiki`;
     
     // Header
-    document.getElementById('w-bg').style.backgroundImage = \`url('\${channel.avatar}')\`;
+    document.getElementById('w-bg').style.backgroundImage = `url('${channel.avatar}')`;
     document.getElementById('w-avatar').src = channel.avatar;
     document.getElementById('w-role').innerHTML = getRoleBadgeHTML(channel.role);
     document.getElementById('w-name').textContent = channel.wiki.fullName || channel.name;
@@ -70,20 +69,20 @@ function renderWiki(channel) {
     
     // Status Badge
     const badgeHTML = channel.isLive 
-        ? \`<div class="status-badge live" style="display:inline-flex;"><span class="dot"></span> Live Streaming</div>\`
-        : \`<div class="status-badge offline" style="display:inline-flex;"><span class="dot"></span> Offline</div>\`;
+        ? `<div class="status-badge live" style="display:inline-flex;"><span class="dot"></span> Live Streaming</div>`
+        : `<div class="status-badge offline" style="display:inline-flex;"><span class="dot"></span> Offline</div>`;
     document.getElementById('w-status').innerHTML = badgeHTML;
 
     // YouTube Button
     document.getElementById('w-youtube-btn').href = channel.youtubeUrl;
 
-    // Main Content (Format newline \n menjadi <br> agar rapi)
+    // Main Content
     if(channel.wiki.bio) {
-        document.getElementById('w-bio-content').innerHTML = channel.wiki.bio.replace(/\\n/g, '<br><br>');
+        document.getElementById('w-bio-content').innerHTML = channel.wiki.bio.replace(/\n/g, '<br><br>');
     }
     
     if(channel.wiki.trivia) {
-        document.getElementById('w-trivia-content').innerHTML = channel.wiki.trivia.replace(/\\n/g, '<br>');
+        document.getElementById('w-trivia-content').innerHTML = channel.wiki.trivia.replace(/\n/g, '<br>');
     }
 
     // Hide loader, show content
@@ -94,12 +93,12 @@ function renderWiki(channel) {
 }
 
 function showError(msg) {
-    document.getElementById('loading').innerHTML = \`
+    document.getElementById('loading').innerHTML = `
         <i data-lucide="alert-triangle" style="width: 64px; height: 64px; color: var(--neon-red); margin-bottom: 1rem;"></i>
         <h2 style="color: #fff; margin-bottom: 1rem;">Wiki Tidak Ditemukan</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem; text-align: center;">\${msg}</p>
+        <p style="color: var(--text-muted); margin-bottom: 2rem; text-align: center;">${msg}</p>
         <a href="/" class="btn btn-primary"><i data-lucide="home"></i> Kembali ke Beranda</a>
-    \`;
+    `;
     lucide.createIcons();
 }
 
