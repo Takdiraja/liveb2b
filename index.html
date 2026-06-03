@@ -133,8 +133,22 @@
                         <input type="text" id="w-fullname" placeholder="Contoh: Binda Girda">
                     </div>
                     <div class="form-group">
-                        <label for="w-image">Foto Karakter (URL Gambar Opsional)</label>
-                        <input type="url" id="w-image" placeholder="Contoh: https://i.imgur.com/foto.jpg">
+                        <label>Foto Karakter</label>
+                        <!-- Hidden input to store base64 or URL -->
+                        <input type="hidden" id="w-image">
+                        
+                        <div id="dropzone" class="dropzone">
+                            <input type="file" id="w-file-input" accept="image/*" style="display: none;">
+                            <div id="dropzone-content">
+                                <i data-lucide="upload-cloud" style="width: 40px; height: 40px; color: var(--neon-primary); margin-bottom: 0.5rem;"></i>
+                                <p style="margin: 0; color: #fff; font-weight: 500;">Tarik & Lepas foto ke sini</p>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Atau klik untuk memilih file</p>
+                            </div>
+                            <img id="w-image-preview" src="" alt="Preview" style="display: none;">
+                            <button type="button" id="remove-img-btn" class="icon-btn remove-img-btn" style="display: none;">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
                         <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Kosongkan jika ingin memakai foto profil YouTube.</small>
                     </div>
                     <div class="form-group">

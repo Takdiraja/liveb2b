@@ -340,6 +340,112 @@ function setupEventListeners() {
     closeWikiBtn.addEventListener('click', () => {
         document.getElementById('wiki-modal').classList.remove('active');
     });
+
+    // Dropzone logic
+    setupDropzone();
+}
+
+function setupDropzone() {
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('w-file-input');
+    const removeBtn = document.getElementById('remove-img-btn');
+
+    // Click to select
+    dropzone.addEventListener('click', (e) => {
+        if(e.target === removeBtn || removeBtn.contains(e.target)) return;
+        fileInput.click();
+    });
+
+    // Drag events
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleImageFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        if(e.target.files && e.target.files.length > 0) {
+            handleImageFile(e.target.files[0]);
+        }
+    });
+
+    // Remove image
+    removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        resetDropzone();
+    });
+}
+
+function handleImageFile(file) {
+    if(!file.type.match('image.*')) {
+        alert('Tolong masukkan file berupa gambar!');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            // Kompresi dengan Canvas
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 500;
+            const MAX_HEIGHT = 500;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Convert to base64 webp
+            const dataUrl = canvas.toDataURL('image/webp', 0.85);
+            setDropzonePreview(dataUrl);
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function setDropzonePreview(imageUrl) {
+    document.getElementById('w-image').value = imageUrl;
+    document.getElementById('w-image-preview').src = imageUrl;
+    document.getElementById('w-image-preview').style.display = 'block';
+    document.getElementById('dropzone-content').style.display = 'none';
+    document.getElementById('remove-img-btn').style.display = 'flex';
+}
+
+function resetDropzone() {
+    document.getElementById('w-image').value = '';
+    document.getElementById('w-image-preview').src = '';
+    document.getElementById('w-image-preview').style.display = 'none';
+    document.getElementById('dropzone-content').style.display = 'block';
+    document.getElementById('remove-img-btn').style.display = 'none';
+    document.getElementById('w-file-input').value = '';
 }
 
 // Wiki Modal Handlers
@@ -352,19 +458,24 @@ function openWikiModal(id) {
     if(channel.wiki) {
         document.getElementById('w-slug').value = channel.wiki.slug || '';
         document.getElementById('w-fullname').value = channel.wiki.fullName || '';
-        document.getElementById('w-image').value = channel.wiki.imageUrl || '';
         document.getElementById('w-affiliation').value = channel.wiki.affiliation || '';
         document.getElementById('w-bio').value = channel.wiki.bio || '';
         document.getElementById('w-trivia').value = channel.wiki.trivia || '';
+        
+        if (channel.wiki.imageUrl) {
+            setDropzonePreview(channel.wiki.imageUrl);
+        } else {
+            resetDropzone();
+        }
     } else {
         // Auto-generate slug suggestion
         const suggestedSlug = channel.name.toLowerCase().replace(/[^a-z0-9]/g, '');
         document.getElementById('w-slug').value = suggestedSlug;
         document.getElementById('w-fullname').value = '';
-        document.getElementById('w-image').value = '';
         document.getElementById('w-affiliation').value = '';
         document.getElementById('w-bio').value = '';
         document.getElementById('w-trivia').value = '';
+        resetDropzone();
     }
 
     document.getElementById('wiki-modal').classList.add('active');
